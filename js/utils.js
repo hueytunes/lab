@@ -20,10 +20,10 @@ export const querySelAll = (selector) => document.querySelectorAll(selector);
  **********************************************/
 
 /**
- * Formats a number into a readable string with suffixes for thousands (k)
- * and millions (M), or scientific notation for very small numbers.
+ * Formats a number into a readable string using standard notation (with commas)
+ * or scientific notation for very small numbers.
  * @param {number} num - The number to format.
- * @returns {string} - The formatted string.
+ *@returns {string} - The formatted string.
  */
 export function formatNumber(num) {
     // Always handle the zero case first
@@ -31,44 +31,27 @@ export function formatNumber(num) {
 
     const absNum = Math.abs(num);
 
-    // Rule for numbers >= 1,000,000 (e.g., 2,500,000 -> "2.50M")
-    if (absNum >= 1e6) {
-        return (num / 1e6).toFixed(2) + 'M';
-    }
-    // Rule for numbers >= 1,000 (e.g., 100,000 -> "100k")
-    else if (absNum >= 1e3) {
-        return (num / 1e3).toFixed(1).replace(/\.0$/, '') + 'k';
-    }
-    // Rule for numbers between 1 and 999 (e.g., 50 -> "50")
-    else if (absNum >= 1) {
-        return num.toLocaleString(undefined, { maximumFractionDigits: 2 });
-    }
-    // Rule for ALL numbers less than 1
-    else {
-        // Use toPrecision for significant figures. (e.g., 0.0005 -> "5.00e-4")
+    // Rule for very small numbers (e.g., 0.0005 -> "5.00e-4")
+    if (absNum > 0 && absNum < 1e-3) {
         return num.toPrecision(3);
     }
+    
+    // Rule for all other numbers (e.g., 50 -> "50", 1200000 -> "1,200,000")
+    // Use toLocaleString for commas and set appropriate fraction digits.
+    return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
 }
+
 /**
- * Formats a number for the dosing calculator
- * without using k/M suffixes for large numbers.
+ * Formats a number for the dosing calculator.
+ * This now uses the main formatNumber function for consistency.
  * @param {number} num - The number to format.
  * @returns {string} - The formatted string.
  */
 export function formatDoseNumber(num) {
-    // Always handle the zero case first
-    if (num === 0) return '0';
-
-    const absNum = Math.abs(num);
-
-    // For very small numbers, use scientific notation for readability.
-    if (absNum > 0 && absNum < 1e-3) {
-        return num.toPrecision(3);
-    }
-
-    // For all other numbers, use standard formatting with commas and up to 4 decimal places.
-    return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
+    // This function now just uses the main, consistent formatter.
+    return formatNumber(num);
 }
+
 /**
  * Formats a concentration value by automatically selecting the best units
  * (mg/mL, µg/mL, or ng/mL) to make the number readable.
@@ -85,7 +68,8 @@ export function formatConcentration(conc_mg_per_ml) {
         if (conc_ng_per_ml >= 1e6) { // If it's 1 mg/mL or more
              return formatNumber(conc_mg_per_ml) + ' mg/mL';
         }
-        return formatNumber(conc_mg_per_ml * 1000) + ' µg/mL';
+        // Note: This logic was slightly updated to handle µg/mL conversion correctly
+        return formatNumber(conc_ng_per_ml / 1000) + ' µg/mL';
     } else {
         return formatNumber(conc_ng_per_ml) + ' ng/mL';
     }
