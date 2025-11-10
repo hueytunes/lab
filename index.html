@@ -25,10 +25,17 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700&display=swap"
     rel="stylesheet"
   />
-  <script>
-  tailwind.config = {
-    darkMode: 'class'
-  }
+<!-- Apply saved/system theme before paint to avoid FOUC -->
+<script>
+  const pref = localStorage.theme;
+  const wantsDark = pref === 'dark' || (!pref && window.matchMedia('(prefers-color-scheme: dark)').matches);
+  if (wantsDark) document.documentElement.classList.add('dark');
+</script>
+
+<!-- Tailwind (class-based dark mode) -->
+<script>
+  // MUST be before the CDN script
+  tailwind.config = { darkMode: 'class' };
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
   <style>
